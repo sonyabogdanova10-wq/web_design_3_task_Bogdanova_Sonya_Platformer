@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Лунный маршрут | Космический платформер</title>
+  
+  <!-- Подключение вариативных шрифтов Caveat (для призрака) и Jura (для всего остального) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Jura:wght@300..700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="game-shell">
+      <div class="hud">
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          ORBITAL ARCADE
+          <span class="eyebrow-divider">/</span>
+          LEVEL 01
+        </div>
+        <div class="heading-row">
+          <div>
+            <h1>Лунный маршрут</h1>
+            <p class="hint">Маленький кот. Большая галактика. Три луны до дома.</p>
+          </div>
+          <div class="moon-mark">☾</div>
+        </div>
+        <div class="status">
+          <div class="status-chip">
+            <span class="status-dot"></span>
+            <span id="stateLabel">Состояние: остановлено</span>
+          </div>
+          <div class="status-chip">
+            <span class="status-icon">◉</span>
+            <span id="fishLabel">Луны: 0/3</span>
+          </div>
+          <div class="status-chip">
+            <span class="status-icon">✧</span>
+            <span id="bestLabel">Рекорд: 0/3</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="game" width="800" height="450"></canvas>
+        <div class="canvas-corner corner-tl"></div>
+        <div class="canvas-corner corner-tr"></div>
+        <div class="canvas-corner corner-bl"></div>
+        <div class="canvas-corner corner-br"></div>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn btn-primary"><span>▶</span> Старт</button>
+        <button id="pauseBtn" class="btn"><span>Ⅱ</span> Пауза</button>
+        <button id="resumeBtn" class="btn"><span>↗</span> Продолжить</button>
+        <button id="restartBtn" class="btn btn-quiet"><span>↻</span> Заново</button>
+      </div>
+
+      <div class="touch-controls">
+        <div class="touch-dpad">
+          <button id="leftBtn" class="touch-btn">←</button>
+          <button id="rightBtn" class="touch-btn">→</button>
+        </div>
+        <button id="jumpBtn" class="touch-btn jump-btn">↑</button>
+      </div>
+
+      <div class="footer-row">
+        <p class="tip">
+          <span class="keycap">←</span><span class="keycap">→</span> движение 
+          <span class="tip-separator">·</span> 
+          <span class="keycap">SPACE</span> прыжок
+        </p>
+        <p class="goal"><span>ЦЕЛЬ</span> Собери 3 луны и открой портал</p>
+      </div>
+      <div class="signature">A SMALL JOURNEY THROUGH THE VOID <span>✦</span></div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
