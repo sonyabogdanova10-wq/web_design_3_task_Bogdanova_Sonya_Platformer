@@ -1,42 +1,17 @@
 export default class Input {
   constructor() {
-    // Клавиши, нажатые с клавиатуры.
     this.keyboardKeys = new Set();
-
-    // Клавиши, нажатые сенсорными кнопками.
-    // Формат: code -> Set(pointerId)
     this.pointerKeys = new Map();
-
-    // Прыжок по нажатию, а не по удержанию.
     this.jumpQueued = false;
-
-    // Активен ли ввод сейчас.
     this.active = true;
-
+    
     this.controlCodes = new Set([
-      "ArrowLeft",
-      "ArrowRight",
-      "ArrowUp",
-      "ArrowDown",
-      "Space",
-      "KeyA",
-      "KeyD",
-      "KeyW"
+      "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+      "Space", "KeyA", "KeyD", "KeyW"
     ]);
-
-    this.jumpCodes = new Set([
-      "Space",
-      "ArrowUp",
-      "KeyW"
-    ]);
-
-    // Эти клавиши на кнопке лучше оставить кнопке, а не игре.
-    this.buttonActivationCodes = new Set([
-      "Space",
-      "Enter",
-      "NumpadEnter"
-    ]);
-
+    this.jumpCodes = new Set(["Space", "ArrowUp", "KeyW"]);
+    this.buttonActivationCodes = new Set(["Space", "Enter", "NumpadEnter"]);
+    
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
@@ -44,23 +19,12 @@ export default class Input {
 
   onKeyDown = (event) => {
     if (!this.active) return;
-
     const tag = event.target && event.target.tagName ? event.target.tagName : "";
     const isButton = tag === "BUTTON";
-
-    // Если фокус на кнопке и нажат Space/Enter, пусть кнопка сработает сама.
-    if (isButton && this.buttonActivationCodes.has(event.code)) {
-      return;
-    }
-
+    if (isButton && this.buttonActivationCodes.has(event.code)) return;
     if (!this.controlCodes.has(event.code)) return;
-
-    // Чтобы страница не прокручивалась игровыми клавишами.
     event.preventDefault();
-
     this.keyboardKeys.add(event.code);
-
-    // Прыжок по нажатию, а не по удержанию.
     if (!event.repeat && this.jumpCodes.has(event.code)) {
       this.jumpQueued = true;
     }
@@ -94,35 +58,25 @@ export default class Input {
 
   setActive(value) {
     this.active = value;
-
-    if (!value) {
-      this.clear();
-    }
+    if (!value) this.clear();
   }
 
   addPointerKey(code, pointerId) {
     if (!this.active) return;
-
     let set = this.pointerKeys.get(code);
-
     if (!set) {
       set = new Set();
       this.pointerKeys.set(code, set);
     }
-
-    set.add(pointerId);
+    // Если pointerId не пришёл (редкий случай на мобильных), используем 0
+    set.add(pointerId ?? 0);
   }
 
   removePointerKey(code, pointerId) {
     const set = this.pointerKeys.get(code);
-
     if (!set) return;
-
-    set.delete(pointerId);
-
-    if (set.size === 0) {
-      this.pointerKeys.delete(code);
-    }
+    set.delete(pointerId ?? 0);
+    if (set.size === 0) this.pointerKeys.delete(code);
   }
 
   attachTouchControls(buttons = {}) {
@@ -133,40 +87,42 @@ export default class Input {
 
   bindPointerButton(element, code) {
     if (!element) return;
-
-    // Защита от повторной привязки.
     if (element.dataset.inputBound === "true") return;
     element.dataset.inputBound = "true";
 
+    // --- Pointer events (для мыши и современных мобильных) ---
     element.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-
       if (!this.active) return;
-
-      if (
-        typeof element.setPointerCapture === "function" &&
-        event.pointerId !== undefined
-      ) {
-        try {
-          element.setPointerCapture(event.pointerId);
-        } catch (error) {
-        }
-      }
-
       this.addPointerKey(code, event.pointerId);
     });
 
-    const release = (event) => {
+    const releasePointer = (event) => {
       if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
-
       this.removePointerKey(code, event.pointerId);
     };
+    element.addEventListener("pointerup", releasePointer);
+    element.addEventListener("pointercancel", releasePointer);
+    element.addEventListener("lostpointercapture", releasePointer);
 
-    element.addEventListener("pointerup", release);
-    element.addEventListener("pointercancel", release);
-    element.addEventListener("lostpointercapture", release);
+    // --- Touch events (подстраховка для мобильных браузеров) ---
+    element.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      if (!this.active) return;
+      // Используем идентификатор первого касания
+      const touch = event.changedTouches[0];
+      this.addPointerKey(code, touch ? touch.identifier : 0);
+    }, { passive: false });
+
+    const releaseTouch = (event) => {
+      event.preventDefault();
+      const touch = event.changedTouches[0];
+      this.removePointerKey(code, touch ? touch.identifier : 0);
+    };
+    element.addEventListener("touchend", releaseTouch, { passive: false });
+    element.addEventListener("touchcancel", releaseTouch, { passive: false });
 
     element.addEventListener("contextmenu", (event) => {
       event.preventDefault();
@@ -175,28 +131,35 @@ export default class Input {
 
   bindJumpButton(element) {
     if (!element) return;
-
-    // Защита от повторной привязки.
     if (element.dataset.inputBound === "true") return;
     element.dataset.inputBound = "true";
 
+    // --- Pointer events ---
     element.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-
       if (!this.active) return;
-
       this.jumpQueued = true;
     });
 
-    const end = (event) => {
+    const endPointer = (event) => {
       if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
     };
+    element.addEventListener("pointerup", endPointer);
+    element.addEventListener("pointercancel", endPointer);
+    element.addEventListener("lostpointercapture", endPointer);
 
-    element.addEventListener("pointerup", end);
-    element.addEventListener("pointercancel", end);
-    element.addEventListener("lostpointercapture", end);
+    // --- Touch events (подстраховка) ---
+    element.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      if (!this.active) return;
+      this.jumpQueued = true;
+    }, { passive: false });
+
+    element.addEventListener("touchend", (event) => {
+      event.preventDefault();
+    }, { passive: false });
 
     element.addEventListener("contextmenu", (event) => {
       event.preventDefault();
