@@ -9,7 +9,11 @@ const ui = {
   restartBtn: document.getElementById("restartBtn"),
   stateEl: document.getElementById("stateLabel"),
   fishEl: document.getElementById("fishLabel"),
-  bestEl: document.getElementById("bestLabel")
+  bestEl: document.getElementById("bestLabel"),
+  
+  leftBtn: document.getElementById("leftBtn"),
+  rightBtn: document.getElementById("rightBtn"),
+  jumpBtn: document.getElementById("jumpBtn")
 };
 
 const game = new Game(canvas, ui);
